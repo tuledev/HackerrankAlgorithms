@@ -17,46 +17,6 @@ struct Utils {
   
 }
 
-func solve<Input, Output> (
-  input: @escaping ()->Input,
-  output: @escaping (Output)->(),
-  excute: @escaping (Input)->Output)
-{
-  let run = input |> excute |> output
-//  run()
-}
-
-typealias Input = (divideNum: Int, array:[Int])
-typealias Output = (Int)
-
-//solve(input: {
-//  return Utils.readLineToArray() 
-//},
-//      output: {
-//        (result: Output) in
-//        print(result)
-//}) {
-//  (input: Input) in
-//  
-//  let createGraph:([Int])->[String:Bool] = {
-//    
-//  }
-//  
-//  func clique(array:[Int]) -> Int {
-//    if array.count == 0 {
-//      return [[]]
-//    }
-//    
-//    let cutFirstArray = array.count > 1 ? Array(array[1...(array.count-1)]) : []
-//    let subsets = powerset(array:cutFirstArray)
-//    
-//    let updatedSubsets = subsets.map() { $0 + [array[0]] }
-//    
-//    return subsets + updatedSubsets
-//  }
-//  
-//}
-
 struct Graph {
   typealias EDGES = [String: Bool]
   private var _edges = EDGES()
@@ -87,23 +47,80 @@ struct Graph {
   }
 }
 
-let graph = Graph(array:[1,7,2,4], divideNum: 3)
 
-print(graph.edgeBetween(1,7))
-print(graph.edgeBetween(2,7))
-print(graph.edgeBetween(7,2))
-print(graph.edgeBetween(7,4))
-print(graph.edgeBetween(4,2))
+func solve<Input, Output> (
+  input: @escaping ()->Input,
+  output: @escaping (Output)->(),
+  excute: @escaping (Input)->Output)
+{
+  let run = input |> excute |> output
+  run()
+}
 
+typealias Input = (divideNum: Int, array:[Int])
+typealias Output = (Int)
 
-
-
-
-
-
-
-
-
+solve(input: {
+  let divideNum = Utils.readLineToArray()[1]
+  return (divideNum, Utils.readLineToArray())
+},
+      output: {
+        (result: Output) in
+        print(result)
+}) {
+  (input: Input) in
+  
+  let graph = Graph.init(array: input.array, divideNum: input.divideNum)
+  
+  func maxLenghtSubsets(subsets:[[Int]]) -> Int {
+    let lengthSubsets = subsets.map() {$0.count}
+    return lengthSubsets.max()!
+  }
+  
+  func clique(array:[Int], graph: Graph, fullArray: [Int]) -> [[Int]] {
+    if array.count == 0 {
+      return [[]]
+    }
+    
+    let cutFirstArray = array.count > 1 ? Array(array[1...(array.count-1)]) : []
+    let subsets = clique(array:cutFirstArray, graph: graph, fullArray: fullArray)
+    
+    let updatedSubsets = subsets.reduce([[Int]]()) {
+      (result, subArray) in
+      if subArray.count >= 1 {
+        for vertex in subArray {
+          if graph.edgeBetween(vertex, array[0]) == false {
+            return result
+          }
+        }
+      }
+      
+      return result + [subArray + [array[0]]]
+    }
+    
+    let result = subsets + updatedSubsets
+    
+    func reduceSubset(subs:[[Int]], remanding: Int) -> [[Int]] {
+      if remanding == 0 {
+        return subs
+      }
+      
+      let maxLengthSubs = maxLenghtSubsets(subsets:subs)
+      return subs.reduce([[Int]]()) {
+        (result, sub) in
+        if (maxLengthSubs - sub.count) >= remanding {
+          return result
+        }
+        return result + [sub]
+      }
+    }
+    let reduced = reduceSubset(subs: result, remanding: fullArray.count - array.count)
+    return reduced
+  }
+  
+  let allCliques = clique(array: input.array, graph: graph, fullArray: input.array)
+  return maxLenghtSubsets(subsets:allCliques)
+}
 
 
 
