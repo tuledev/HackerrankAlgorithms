@@ -18,32 +18,42 @@ struct Utils {
 }
 
 struct Graph {
-  typealias EDGES = [String: Bool]
+  typealias EDGES = [Int: Bool]
   private var _edges = EDGES()
   init(array:[Int], divideNum:Int) {
-    _edges = createGraph(array: array, divideNum: divideNum, keyConverter: keyFromVertexs)
+    _edges = createGraph(array: array, divideNum: divideNum)
   }
   
-  private func createGraph(array:[Int], divideNum: Int, keyConverter:(Int,Int)->String) -> EDGES {
+  private func createGraph(array:[Int], divideNum: Int) -> EDGES {
     var edges = EDGES()
     for idx1 in 0...array.count-2 {
       for idx2 in idx1...array.count-1 {
         let vertex1 = array[idx1]
         let vertex2 = array[idx2]
         if ((vertex1 + vertex2) % divideNum != 0) {
-          edges[keyConverter(vertex1, vertex2)] = true
+          
+          let updateEdge:(EDGES,Int,Int) -> EDGES = {
+            (inputEdge, ver1, ver2) in
+            var edge = inputEdge
+            let key = self.keyBy(ver1, ver2)
+            edge[key] = true
+            return edge
+          }
+          edges = updateEdge(edges, vertex1, vertex2)
         }
       }
     }
     return edges
   }
-  
-  private func keyFromVertexs(vertex1: Int, vertex2: Int) -> String {
-    return vertex1>vertex2 ? "\(vertex1)" + "-" + "\(vertex2)" : "\(vertex2)" + "-" + "\(vertex1)"
+    
+  func keyBy(_ ver1: Int, _ ver2:Int) -> Int {
+    return ver1 > ver2 ? ver1*(ver1/2) + ver2 : ver1 + ver2*(ver2/2)
   }
   
-  func edgeBetween(_ vertex1: Int,_ vertex2: Int) -> Bool {
-    return _edges[keyFromVertexs(vertex1: vertex1, vertex2: vertex2)] == nil ? false : true
+  func edgeBetween(_ ver1: Int,_ ver2: Int) -> Bool {
+    let edge = _edges[keyBy(ver1, ver2)]
+    if edge == nil { return false }
+    return true
   }
 }
 
@@ -84,14 +94,12 @@ solve(input: {
     
     let cutFirstArray = array.count > 1 ? Array(array[1...(array.count-1)]) : []
     let subsets = clique(array:cutFirstArray, graph: graph, fullArray: fullArray)
-    
     let updatedSubsets = subsets.reduce([[Int]]()) {
       (result, subArray) in
-      if subArray.count >= 1 {
-        for vertex in subArray {
-          if graph.edgeBetween(vertex, array[0]) == false {
-            return result
-          }
+      
+      for vertex in subArray {
+        if graph.edgeBetween(vertex, array[0]) == false {
+          return result
         }
       }
       
@@ -115,7 +123,10 @@ solve(input: {
       }
     }
     let reduced = reduceSubset(subs: result, remanding: fullArray.count - array.count)
+//    print("-")
+    print(reduced)
     return reduced
+//    return result
   }
   
   let allCliques = clique(array: input.array, graph: graph, fullArray: input.array)
