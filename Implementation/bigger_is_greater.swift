@@ -37,6 +37,14 @@ struct Utils {
     let str2 = replace(myString: str1, index2, char1)
     return str2
   }
+  
+  static func bringChar(at index1: Int, to index2: Int, str: String) -> String {
+    let char = getChar(at: index1, fromString: str)
+    var updatedStr = str
+    updatedStr.remove(at:updatedStr.index(updatedStr.startIndex, offsetBy: index1))
+    updatedStr.insert(char,at: updatedStr.index(updatedStr.startIndex, offsetBy: index2))
+    return updatedStr;
+  }
 }
 
 func solve<Input, Output> (
@@ -69,25 +77,39 @@ solve(input: {
 }) {
   (input: Input) in
   func greaterThan(_ str: String) -> String {
-    func checkingGreater(atIndex index:Int, str: String) -> Int {
-      if index < 0 { return -1 }
+    func checkingGreater(atIndex index:Int, str: String) -> (Int, Int, String) {
+      if index < 0 { return (-1,-1,str) }
       
       let char1 =  Utils.getChar(at:index, fromString: str)
-      let char2 =  Utils.getChar(at:index+1, fromString: str)
-      if (char1 < char2)  {
-        return index
+      var index2 = -1
+      var updatedStr = str
+      var updatedIndex = index
+      for idx in (index+1)..<str.characters.count {
+        let char2 =  Utils.getChar(at:idx, fromString: updatedStr)
+        if (char1 < char2)  {
+          index2 = idx
+          break;
+        }
+        else if (char2 < char1) {
+          updatedStr = Utils.swapChar(at: updatedIndex, and: idx, inString: updatedStr)
+          updatedIndex = idx
+        }
+      }
+      
+      if (index2 != -1)  {
+        return (index, index2, updatedStr)
       }
       else {
-        return checkingGreater(atIndex: index-1, str: str)
+        return checkingGreater(atIndex: index-1, str: updatedStr)
       }
     }
     
     func greater(str: String) -> String {
       let greaterIndex = checkingGreater(atIndex: str.characters.count-2, str: str)
-      if greaterIndex == -1{
+      if greaterIndex.0 == -1{
         return "no answer"
       }
-      return Utils.swapChar(at: greaterIndex, and: greaterIndex+1, inString: str)
+      return Utils.bringChar(at: greaterIndex.1, to: greaterIndex.0, str: greaterIndex.2)
     }
     
     return greater(str: str)
