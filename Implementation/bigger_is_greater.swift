@@ -1,8 +1,47 @@
+
 import Foundation
+
+typealias InputType = [String]
+typealias OutputType = [String]
+
+
+///////////////////////////////////////
+
+func swapChar(chars: [Character], index: Int, swapIndex: Int) -> [Character] {
+  var resultsChars = chars
+  let tempChar = resultsChars[index]
+  resultsChars[index] = resultsChars[swapIndex]
+  resultsChars[swapIndex] = tempChar
+  return resultsChars
+}
+
+func sortChars(chars: [Character], fromIndex: Int) -> [Character] {
+  let resultsChars = Array(chars.prefix(fromIndex))
+    + Array(chars.suffix(from: fromIndex).reversed())
+  return resultsChars
+}
+
+func biggerIsGreater(_ testcase: String) -> String {
+  var chars = Array(testcase)
+  for index in (0..<(chars.count-1)).reversed() {
+    for tailIndex in ((index+1)..<(chars.count)).reversed() {
+      if chars[index] < chars[tailIndex] {
+        chars = swapChar(chars: chars, index: index, swapIndex: tailIndex)
+        return String(sortChars(chars: chars, fromIndex: index+1))
+      }
+    }
+  }
+  return "no answer"
+}
+
+func solve(_ testcases: InputType) -> OutputType {
+  return testcases.map{ biggerIsGreater($0) }
+}
+///////////////////////////////////////
 
 infix operator |> : AdditionPrecedence
 func |> <T1, T2, T3> (left: @escaping (T1)->T2, right: @escaping (T2)->T3) -> (T1) -> T3 {
-  return { (t1:T1) -> T3 in return right(left(t1))}
+  return {return right(left($0))}
 }
 
 struct Utils {
@@ -11,109 +50,32 @@ struct Utils {
     return readLine()!.components(separatedBy:" ").map{Int(String($0))!}
   }
   
-  static func readLineToInt()->Int {
+  static  func readLineToInt()->Int {
     return Int(readLine()!)!
   }
   
-  static func readLineToString() -> String {
-    return readLine()!
-  }
-  
-  static func getChar(at: Int, fromString str: String) -> Character {
-    return str[str.index(str.startIndex, offsetBy: at)]
-  }
-  
-  static func replace(myString: String, _ index: Int, _ newChar: Character) -> String {
-    var chars = Array(myString.characters)     // gets an array of characters
-    chars[index] = newChar
-    let modifiedString = String(chars)
-    return modifiedString
-  }
-  
-  static func swapChar(at index1: Int, and index2: Int, inString str: String) -> String {
-    let char1 = getChar(at: index1, fromString: str)
-    let char2 = getChar(at: index2, fromString: str)
-    let str1 = replace(myString: str, index1, char2)
-    let str2 = replace(myString: str1, index2, char1)
-    return str2
-  }
-  
-  static func bringChar(at index1: Int, to index2: Int, str: String) -> String {
-    let char = getChar(at: index1, fromString: str)
-    var updatedStr = str
-    updatedStr.remove(at:updatedStr.index(updatedStr.startIndex, offsetBy: index1))
-    updatedStr.insert(char,at: updatedStr.index(updatedStr.startIndex, offsetBy: index2))
-    return updatedStr;
-  }
 }
 
-func solve<Input, Output> (
-  input: @escaping ()->Input,
-  output: @escaping (Output)->(),
-  excute: @escaping (Input)->Output)
-{
-  let run = input |> excute |> output
-  run()
+let input: (Int) -> (InputType) = { _ in
+  let numberInput = Utils.readLineToInt()
+  var testCases = [String]()
+  for _ in 0..<numberInput {
+    testCases.append(readLine()!)
+  }
+  return testCases
 }
 
-typealias Input = ([String])
-typealias Output = ([String])
-
-solve(input: {
-  let n = Utils.readLineToInt()
-  func readToEnd(remanding: Int, result:[String]) -> [String] {
-    if remanding == 0 {
-      return result
-    }
-    else {
-      return readToEnd(remanding: remanding - 1, result: result + [Utils.readLineToString()])
-    }
-  }
-  return readToEnd(remanding: n, result:[String]())
-},
-      output: {
-        (result: Output) in
-        result.forEach() { print($0) }
-}) {
-  (input: Input) in
-  func greaterThan(_ str: String) -> String {
-    func checkingGreater(atIndex index:Int, str: String) -> (Int, Int, String) {
-      if index < 0 { return (-1,-1,str) }
-      
-      let char1 =  Utils.getChar(at:index, fromString: str)
-      var index2 = -1
-      var updatedStr = str
-      var updatedIndex = index
-      for idx in (index+1)..<str.characters.count {
-        let char2 =  Utils.getChar(at:idx, fromString: updatedStr)
-        if (char1 < char2)  {
-          index2 = idx
-          break;
-        }
-        else if (char2 < char1) {
-          updatedStr = Utils.swapChar(at: updatedIndex, and: idx, inString: updatedStr)
-          updatedIndex = idx
-        }
-      }
-      
-      if (index2 != -1)  {
-        return (index, index2, updatedStr)
-      }
-      else {
-        return checkingGreater(atIndex: index-1, str: updatedStr)
-      }
-    }
-    
-    func greater(str: String) -> String {
-      let greaterIndex = checkingGreater(atIndex: str.characters.count-2, str: str)
-      if greaterIndex.0 == -1{
-        return "no answer"
-      }
-      return Utils.bringChar(at: greaterIndex.1, to: greaterIndex.0, str: greaterIndex.2)
-    }
-    
-    return greater(str: str)
-  }
-  
-  return input.map() { greaterThan($0) }
+let output: (OutputType) -> () = {
+  print("result", $0)
 }
+
+let excute: (InputType) -> (OutputType) = {
+  return solve($0)
+}
+
+//////////////////////////////////////////////////
+let startTime = CFAbsoluteTimeGetCurrent()
+let run = input |> excute |> output
+run(1)
+let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+print("time: ", timeElapsed)
