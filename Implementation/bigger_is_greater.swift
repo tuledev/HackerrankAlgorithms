@@ -9,7 +9,7 @@ typealias OutputType = [String]
 
 func swapChar(chars: [Character], index: Int, swapIndex: Int) -> [Character] {
   var resultsChars = chars
-  let tempChar = resultsChtouch ars[index]
+  let tempChar = resultsChars[index]
   resultsChars[index] = resultsChars[swapIndex]
   resultsChars[swapIndex] = tempChar
   return resultsChars
